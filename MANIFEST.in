@@ -1,2 +1,4 @@
-include CMakeLists.txt
+include pyproject.toml
+include monkeypatch_distutils.py
+include cmake/*
 include src/*
