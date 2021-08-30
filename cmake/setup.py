@@ -131,7 +131,7 @@ setup(
     license='PSF',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
-    setup_requires=["pybind11"],
+    #setup_requires=["pybind11"],
     ext_modules=[CMakeExtension('slz')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
