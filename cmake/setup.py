@@ -125,7 +125,7 @@ class CMakeBuild(build_ext):
 setup(
     name='slz',
     description='slz',
-    long_description=open("README.md").read(),
+    long_description=open("../README.md").read(),
     version='0.0.0.1',
     url='https://github.com/cielavenir/python-slz',
     license='PSF',
