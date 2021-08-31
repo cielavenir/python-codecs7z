@@ -13,7 +13,7 @@ except ImportError:
 ext_modules = [
     Pybind11Extension(
         "slz",
-        ['src/pyslz.cpp', 'src/slz.c'],  # Sort source files for reproducibility
+        ['src/pyslz.cpp', 'src/libslz/src/slz.c'],  # Sort source files for reproducibility
     ),
 ]
 
