@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 
 extern "C" {
-#include "slz.h"
+#include "libslz/src/slz.h"
 }
 
 namespace py = pybind11;
