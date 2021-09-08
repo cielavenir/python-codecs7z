@@ -1,3 +1,5 @@
+[![PyPI](https://img.shields.io/pypi/v/slz)](https://pypi.org/project/slz/)
+
 ## slz
 
 a (quick) binding for http://www.libslz.org/
