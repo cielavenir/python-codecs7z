@@ -1,0 +1,23 @@
+name: manylinux
+  
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+
+    steps:
+    - name: Build wheel
+      uses: RalfG/python-wheels-manylinux-build@v0.3.4-manylinux1_x86_64
+      with:
+        python-versions: "cp27-cp27mu cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"
+        pre-build-command: "git submodule init; git submodule update"
+    - name: Upload wheel
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-${{ matrix.os }}
+        path: dist
