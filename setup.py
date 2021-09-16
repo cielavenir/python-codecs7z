@@ -23,7 +23,7 @@ setup(
     long_description=open("README.md").read(),
     version='0.0.0.1',
     url='https://github.com/cielavenir/python-slz',
-    license='PSF',
+    license='MIT',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
     setup_requires=["pybind11"],
