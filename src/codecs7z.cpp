@@ -99,7 +99,10 @@ public:
         first=false;
         for(;hasInput && !finished;)usleep(SLEEP_US);
         for(;!requireInput && !finished;)usleep(SLEEP_US);
-        if(finished)pthread_join(thread,NULL);
+        if(finished){
+            pthread_join(thread,NULL);
+            if(result)throw std::runtime_error(format("Code() error (%d)", result));
+        }
         return py::bytes((char*)outstr.data(), outstr.size());
     }
 };
