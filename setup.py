@@ -18,7 +18,7 @@ ext_modules = [
             'src/p7zip/CPP/7zip/Compress/DeflateEncoder.cpp', 'src/p7zip/CPP/7zip/Compress/DeflateDecoder.cpp',
             'src/p7zip/CPP/7zip/Compress/LzOutWindow.cpp', 'src/p7zip/CPP/7zip/Compress/BitlDecoder.cpp',
             'src/p7zip/CPP/7zip/Common/InBuffer.cpp', 'src/p7zip/CPP/7zip/Common/OutBuffer.cpp',
-            'src/p7zip/CPP/7zip/Common/CWrappers.cpp', 'src/CPP/7zip/Common/StreamUtils.cpp',
+            'src/p7zip/CPP/7zip/Common/CWrappers.cpp', 'src/p7zip/CPP/7zip/Common/StreamUtils.cpp',
             'src/p7zip/C/Alloc.c', 'src/p7zip/C/LzFind.c', 'src/p7zip/C/HuffEnc.c', 'src/p7zip/C/Sort.c',
         ],
         include_dirs=['src/p7zip/CPP', 'src/p7zip/CPP/myWindows', 'src/p7zip/CPP/include_windows'],

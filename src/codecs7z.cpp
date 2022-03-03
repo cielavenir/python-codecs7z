@@ -4,9 +4,10 @@
 #include "Common/MyInitGuid.h"
 #include "7zip/ICoder.h"
 
-extern "C" {
-#include "libslz/src/slz.h"
-}
+#include "7zip/Compress/DeflateEncoder.h"
+#include "7zip/Compress/DeflateDecoder.h"
+
+const unsigned int SLEEP_US = 10;
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -20,37 +21,38 @@ std::string format(const std::string& fmt, Args ... args ){
     return std::string(&buf[0], &buf[0] + len);
 }
 
-class compressobj_base: public {
+class compressobj_base: public ISequentialInStream, public ISequentialOutStream, public CMyUnknownImp{
     std::string instr;
     std::vector<char>outstr;
     bool requireInput;
     bool hasInput;
     bool first;
-    int result;
-    pthread_t thread;
 
     unsigned int offset;
-    unsigned int typ;
-    unsigned int dsize;
-    TCmpStruct CmpStruct;
 public:
+    unsigned int level;
+    pthread_t thread;
+    int result;
     bool finished;
-    compressobj_base(int typ=0, int dsize=4096):
+    compressobj_base(int level=-1):
         requireInput(false), hasInput(false), first(true), finished(false), result(0), thread(NULL),
-        typ(typ), dsize(dsize)
+        level(level)
     {
-        if(typ>1)throw std::invalid_argument(format("invalid type, must be 0 or 1 (%d)", typ));
-        if(dsize!=1024 && dsize!=2048 && dsize!=4096)throw std::invalid_argument(format("invalid dsize, must be 1024, 2048 or 4096 (%d)", dsize));
         outstr.reserve(65536);
     }
     ~compressobj_base(){
         pthread_cancel(thread);
     }
 
-    void put(char *buf, unsigned int len){
-        outstr.insert(outstr.end(), buf, buf+len);
+    MY_UNKNOWN_IMP2(ISequentialInStream, ISequentialOutStream)
+    STDMETHOD(Write)(const void *_data, UInt32 size, UInt32 *processedSize){
+        const char *data = (const char*)_data;
+        outstr.insert(outstr.end(), data, data+size);
+        *processedSize = size;
+        return S_OK;
     }
-    unsigned int get(char *buf, unsigned int size){
+    STDMETHOD(Read)(void *_data, UInt32 size, UInt32 *processedSize){
+        char *data = (char*)_data;
         if(offset == instr.size()){
             requireInput = true;
             for(;!hasInput;)usleep(SLEEP_US);
@@ -59,23 +61,13 @@ public:
         }
         hasInput = false;
         unsigned int copysize = offset+size > instr.size() ? instr.size()-offset : size;
-        memcpy(buf,instr.data()+offset,copysize);
+        memcpy(data,instr.data()+offset,copysize);
         offset+=copysize;
-        return copysize;
+        *processedSize = copysize;
+        return S_OK;
     }
-    static void C_put(char *buf, unsigned int *size, void *param){
-        ((dclimplode_compressobj*)param)->put(buf, *size);
-    }
-    static unsigned int C_get(char *buf, unsigned int *size, void *param){
-        return ((dclimplode_compressobj*)param)->get(buf, *size);
-    }
-    static void* C_impl(void *ptr){
-        TCmpStruct *pCmpStruct = &((dclimplode_compressobj*)ptr)->CmpStruct;
-        memset(pCmpStruct, 0, sizeof(TCmpStruct));
-        ((dclimplode_compressobj*)ptr)->result = implode(C_get, C_put, (char*)pCmpStruct, ptr, &((dclimplode_compressobj*)ptr)->typ, &((dclimplode_compressobj*)ptr)->dsize);
-        ((dclimplode_compressobj*)ptr)->finished = true;
-        return NULL;
-    }
+
+    virtual int start_thread() = 0;
 
     py::bytes compress(const py::bytes &obj){
         outstr.resize(0);
@@ -86,13 +78,13 @@ public:
             instr = std::string(buffer, length);
             hasInput = true;
         }
-        if(first)offset=0,pthread_create(&thread,NULL,C_impl,this);
+        if(first)offset=0,start_thread();
         first=false;
         for(;hasInput && !finished;)usleep(SLEEP_US);
         for(;!requireInput && !finished;)usleep(SLEEP_US);
         if(finished){
             pthread_join(thread,NULL);
-            if(result)throw std::runtime_error(format("implode() error (%d)", result));
+            if(result)throw std::runtime_error(format("Code() error (%d)", result));
         }
         return py::bytes((char*)outstr.data(), outstr.size());
     }
@@ -103,7 +95,7 @@ public:
             instr = "";
             hasInput = true;
         }
-        if(first)offset=0,pthread_create(&thread,NULL,C_impl,this);
+        if(first)offset=0,start_thread();
         first=false;
         for(;hasInput && !finished;)usleep(SLEEP_US);
         for(;!requireInput && !finished;)usleep(SLEEP_US);
@@ -112,12 +104,126 @@ public:
     }
 };
 
-PYBIND11_MODULE(slz, m){
-    py::class_<slz_compressobj, std::shared_ptr<slz_compressobj> >(m, "compressobj")
-    .def(py::init<int, int>(), "level"_a=-1)
-    .def("compress", &slz_compressobj::compress,
+class deflate_compressobj: public compressobj_base{
+public:
+    deflate_compressobj(int level=-1):
+        compressobj_base(level)
+    {
+    }
+    void impl(){
+        NCompress::NDeflate::NEncoder::CCOMCoder coder;
+        if(level>=0){
+            PROPID ID[]={NCoderPropID::kLevel};
+            PROPVARIANT VAR[]={{VT_UI4,0,0,0,{0}}};
+            VAR[0].uintVal=level;
+            coder.SetCoderProperties(ID,VAR,1);
+        }
+        result = coder.Code(this, this, NULL, NULL, NULL);
+        finished = true;
+    }
+    static void* C_impl(void *ptr){
+        ((deflate_compressobj*)ptr)->impl();
+        return NULL;
+    }
+    virtual int start_thread(){
+        return pthread_create(&thread,NULL,C_impl,this);
+    }
+};
+
+class deflate_decompressobj: public compressobj_base{
+public:
+    deflate_decompressobj():
+        compressobj_base(-1)
+    {
+    }
+    void impl(){
+        NCompress::NDeflate::NDecoder::CCOMCoder coder;
+        result = coder.Code(this, this, NULL, NULL, NULL);
+        finished = true;
+    }
+    static void* C_impl(void *ptr){
+        ((deflate_decompressobj*)ptr)->impl();
+        return NULL;
+    }
+    virtual int start_thread(){
+        return pthread_create(&thread,NULL,C_impl,this);
+    }
+};
+
+class deflate64_compressobj: public compressobj_base{
+public:
+    deflate64_compressobj(int level=-1):
+        compressobj_base(level)
+    {
+    }
+    void impl(){
+        NCompress::NDeflate::NEncoder::CCOMCoder64 coder;
+        if(level>=0){
+            PROPID ID[]={NCoderPropID::kLevel};
+            PROPVARIANT VAR[]={{VT_UI4,0,0,0,{0}}};
+            VAR[0].uintVal=level;
+            coder.SetCoderProperties(ID,VAR,1);
+        }
+        result = coder.Code(this, this, NULL, NULL, NULL);
+        finished = true;
+    }
+    static void* C_impl(void *ptr){
+        ((deflate64_compressobj*)ptr)->impl();
+        return NULL;
+    }
+    virtual int start_thread(){
+        return pthread_create(&thread,NULL,C_impl,this);
+    }
+};
+
+class deflate64_decompressobj: public compressobj_base{
+public:
+    deflate64_decompressobj():
+        compressobj_base(-1)
+    {
+    }
+    void impl(){
+        NCompress::NDeflate::NDecoder::CCOMCoder64 coder;
+        result = coder.Code(this, this, NULL, NULL, NULL);
+        finished = true;
+    }
+    static void* C_impl(void *ptr){
+        ((deflate64_decompressobj*)ptr)->impl();
+        return NULL;
+    }
+    virtual int start_thread(){
+        return pthread_create(&thread,NULL,C_impl,this);
+    }
+};
+
+PYBIND11_MODULE(codecs7z, m){
+    py::class_<deflate_compressobj, std::shared_ptr<deflate_compressobj> >(m, "deflate_compressobj")
+    .def(py::init<int>(), "level"_a=-1)
+    .def("compress", &deflate_compressobj::compress,
      "obj"_a
     )
-    .def("flush", &slz_compressobj::flush)
+    .def("flush", &deflate_compressobj::flush)
+    ;
+
+    py::class_<deflate_decompressobj, std::shared_ptr<deflate_decompressobj> >(m, "deflate_decompressobj")
+    .def(py::init<>())
+    .def("decompress", &deflate_decompressobj::compress,
+     "obj"_a
+    )
+    ;
+
+    py::class_<deflate64_compressobj, std::shared_ptr<deflate64_compressobj> >(m, "deflate64_compressobj")
+    .def(py::init<int>(), "level"_a=-1)
+    .def("compress", &deflate64_compressobj::compress,
+     "obj"_a
+    )
+    .def("flush", &deflate64_compressobj::flush)
+    ;
+
+    py::class_<deflate64_decompressobj, std::shared_ptr<deflate64_decompressobj> >(m, "deflate64_decompressobj")
+    .def(py::init<>())
+    .def("decompress", &deflate64_decompressobj::compress,
+     "obj"_a
+    )
     ;
 }
