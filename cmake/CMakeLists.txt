@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
-project(slz)
+project(codecs7z)
 
 find_package(pybind11 REQUIRED)
-pybind11_add_module(slz ../src/pyslz.cpp ../src/libslz/src/slz.c)
+pybind11_add_module(codecs7z
+  src/codecs7z.cpp
+  src/p7zip/CPP/7zip/Compress/DeflateEncoder.cpp src/p7zip/CPP/7zip/Compress/DeflateDecoder.cpp
+  src/p7zip/CPP/7zip/Compress/LzOutWindow.cpp src/p7zip/CPP/7zip/Compress/BitlDecoder.cpp
+  src/p7zip/CPP/7zip/Common/InBuffer.cpp src/p7zip/CPP/7zip/Common/OutBuffer.cpp
+  src/p7zip/CPP/7zip/Common/CWrappers.cpp src/CPP/7zip/Common/StreamUtils.cpp
+  src/p7zip/C/Alloc.c src/p7zip/C/LzFind.c src/p7zip/C/HuffEnc.c src/p7zip/C/Sort.c
+)

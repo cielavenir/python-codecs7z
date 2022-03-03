@@ -12,18 +12,26 @@ except ImportError:
 
 ext_modules = [
     Pybind11Extension(
-        "slz",
-        ['src/pyslz.cpp', 'src/libslz/src/slz.c'],  # Sort source files for reproducibility
+        "codecs7z",
+        [
+            'src/codecs7z.cpp',
+            'src/p7zip/CPP/7zip/Compress/DeflateEncoder.cpp', 'src/p7zip/CPP/7zip/Compress/DeflateDecoder.cpp',
+            'src/p7zip/CPP/7zip/Compress/LzOutWindow.cpp', 'src/p7zip/CPP/7zip/Compress/BitlDecoder.cpp',
+            'src/p7zip/CPP/7zip/Common/InBuffer.cpp', 'src/p7zip/CPP/7zip/Common/OutBuffer.cpp',
+            'src/p7zip/CPP/7zip/Common/CWrappers.cpp', 'src/CPP/7zip/Common/StreamUtils.cpp',
+            'src/p7zip/C/Alloc.c', 'src/p7zip/C/LzFind.c', 'src/p7zip/C/HuffEnc.c', 'src/p7zip/C/Sort.c',
+        ],
+        include_dirs=['src/p7zip/CPP', 'src/p7zip/CPP/myWindows', 'src/p7zip/CPP/include_windows'],
     ),
 ]
 
 setup(
-    name='slz',
-    description='a (quick) binding for libslz',
+    name='codecs7z',
+    description='codecs7z',
     long_description=open("README.md").read(),
     version='0.0.0.1',
-    url='https://github.com/cielavenir/python-slz',
-    license='MIT',
+    url='https://github.com/cielavenir/python-codecs7z',
+    license='LGPL',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
     setup_requires=["pybind11"],
@@ -37,7 +45,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Python Software Foundation License',
         'Operating System :: POSIX',
-        'Operating System :: Microsoft :: Windows',
+        #'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
         'Topic :: Software Development :: Libraries',
         'Topic :: Utilities',

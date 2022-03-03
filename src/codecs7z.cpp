@@ -1,5 +1,9 @@
 #include <pybind11/pybind11.h>
 
+#include "StdAfx.h"
+#include "Common/MyInitGuid.h"
+#include "7zip/ICoder.h"
+
 extern "C" {
 #include "libslz/src/slz.h"
 }
