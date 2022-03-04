@@ -79,10 +79,6 @@ def test_codecs7z_inflate64():
     assert ifl.decompress(bytesio.read())+ifl.decompress(b'') == content
 
 def test_codecs7z_bzip2():
-    try:
-        from zipfile_deflate64 import deflate64
-    except ImportError:
-        pytest.xfail('zipfile_deflate64 not available')
     bytesio = io.BytesIO()
     with open(os.path.join(os.path.dirname(__file__), '10000SalesRecords.csv'), 'rb') as f:
         content = f.read()
