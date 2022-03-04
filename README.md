@@ -2,7 +2,7 @@
 
 ## codecs7z
 
-a (quick) binding for 7-zip codecs.
+a (light) binding for 7-zip codecs.
 
 For now Deflate/Deflate64/BZip2 are covered.
 
