@@ -8,7 +8,7 @@ For now Deflate/Deflate64/BZip2 are covered.
 
 ### caveats
 
-1. LZMA/PPMd are not covered as they are not self-contained format (decoding OPTIONs have to be specified), hence not covered. For PPMd, use [pyppmd](pyppmd).
+1. LZMA/PPMd are not covered as they are not self-contained format (decoding OPTIONs have to be specified and SetDecoderProperties2 even looks implementation-specific), hence not covered. For PPMd, use [pyppmd](pyppmd).
 
 2. Deflate(64) decompressors have to be flushed, hence decompression is incompatible with zipfile. For Deflate64 decompression, use [zipfile-deflate64](https://pypi.org/project/zipfile-deflate64/).
 
