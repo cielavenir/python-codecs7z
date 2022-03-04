@@ -1,16 +1,16 @@
-[![PyPI](https://img.shields.io/pypi/v/slz)](https://pypi.org/project/slz/)
+[![PyPI](https://img.shields.io/pypi/v/codecs7z)](https://pypi.org/project/codecs7z/)
 
-## slz
+## codecs7z
 
-a (quick) binding for http://www.libslz.org/
+a (quick) binding for 7-zip codecs.
 
-```
-o = slz.compressobj
-o.compress('hello')
-o.flush()
-```
+For now Deflate/Deflate64/BZip2 are covered.
 
-the stream is compatible with zlib deflate.
+### caveats
+
+1. LZMA/PPMd are not covered as they are not self-contained format (decoding OPTIONs have to be specified), hence not covered. For PPMd, use [pyppmd](pyppmd).
+
+2. Deflate(64) decompressors have to be flushed, hence decompression is incompatible with zipfile. For Deflate64 decompression, use [zipfile-deflate64](https://pypi.org/project/zipfile-deflate64/).
 
 ## tested versions
 

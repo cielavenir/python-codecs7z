@@ -6,6 +6,8 @@
 
 #include "7zip/Compress/DeflateEncoder.h"
 #include "7zip/Compress/DeflateDecoder.h"
+#include "7zip/Compress/BZip2Encoder.h"
+#include "7zip/Compress/BZip2Decoder.h"
 
 const unsigned int SLEEP_US = 10;
 
@@ -207,6 +209,56 @@ public:
     }
 };
 
+class bzip2_compressobj: public compressobj_base{
+public:
+    bzip2_compressobj(int level=-1):
+        compressobj_base(level)
+    {
+    }
+    void impl(){
+        AddRef(); // ISequentialInStream
+        AddRef(); // ISequentialOutStream
+        NCompress::NBZip2::CEncoder coder;
+        if(level>=0){
+            PROPID ID[]={NCoderPropID::kLevel};
+            PROPVARIANT VAR[]={{VT_UI4,0,0,0,{0}}};
+            VAR[0].uintVal=level;
+            coder.SetCoderProperties(ID,VAR,1);
+        }
+        result = coder.Code(this, this, NULL, NULL, NULL);
+        finished = true;
+    }
+    static void* C_impl(void *ptr){
+        ((bzip2_compressobj*)ptr)->impl();
+        return NULL;
+    }
+    virtual int start_thread(){
+        return pthread_create(&thread,NULL,C_impl,this);
+    }
+};
+
+class bzip2_decompressobj: public compressobj_base{
+public:
+    bzip2_decompressobj():
+        compressobj_base(-1)
+    {
+    }
+    void impl(){
+        AddRef(); // ISequentialInStream
+        AddRef(); // ISequentialOutStream
+        NCompress::NBZip2::CDecoder coder;
+        result = coder.Code(this, this, NULL, NULL, NULL);
+        finished = true;
+    }
+    static void* C_impl(void *ptr){
+        ((bzip2_decompressobj*)ptr)->impl();
+        return NULL;
+    }
+    virtual int start_thread(){
+        return pthread_create(&thread,NULL,C_impl,this);
+    }
+};
+
 PYBIND11_MODULE(codecs7z, m){
     py::class_<deflate_compressobj, std::shared_ptr<deflate_compressobj> >(m, "deflate_compressobj")
     .def(py::init<int>(), "level"_a=-1)
@@ -234,6 +286,21 @@ PYBIND11_MODULE(codecs7z, m){
     py::class_<deflate64_decompressobj, std::shared_ptr<deflate64_decompressobj> >(m, "deflate64_decompressobj")
     .def(py::init<>())
     .def("decompress", &deflate64_decompressobj::compress,
+     "obj"_a
+    )
+    ;
+
+    py::class_<bzip2_compressobj, std::shared_ptr<bzip2_compressobj> >(m, "bzip2_compressobj")
+    .def(py::init<int>(), "level"_a=-1)
+    .def("compress", &bzip2_compressobj::compress,
+     "obj"_a
+    )
+    .def("flush", &bzip2_compressobj::flush)
+    ;
+
+    py::class_<bzip2_decompressobj, std::shared_ptr<bzip2_decompressobj> >(m, "bzip2_decompressobj")
+    .def(py::init<>())
+    .def("decompress", &bzip2_decompressobj::compress,
      "obj"_a
     )
     ;
