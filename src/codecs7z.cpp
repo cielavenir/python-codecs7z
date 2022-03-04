@@ -114,6 +114,8 @@ public:
     {
     }
     void impl(){
+        AddRef(); // ISequentialInStream
+        AddRef(); // ISequentialOutStream
         NCompress::NDeflate::NEncoder::CCOMCoder coder;
         if(level>=0){
             PROPID ID[]={NCoderPropID::kLevel};
@@ -140,6 +142,8 @@ public:
     {
     }
     void impl(){
+        AddRef(); // ISequentialInStream
+        AddRef(); // ISequentialOutStream
         NCompress::NDeflate::NDecoder::CCOMCoder coder;
         result = coder.Code(this, this, NULL, NULL, NULL);
         finished = true;
@@ -160,6 +164,8 @@ public:
     {
     }
     void impl(){
+        AddRef(); // ISequentialInStream
+        AddRef(); // ISequentialOutStream
         NCompress::NDeflate::NEncoder::CCOMCoder64 coder;
         if(level>=0){
             PROPID ID[]={NCoderPropID::kLevel};
@@ -186,6 +192,8 @@ public:
     {
     }
     void impl(){
+        AddRef(); // ISequentialInStream
+        AddRef(); // ISequentialOutStream
         NCompress::NDeflate::NDecoder::CCOMCoder64 coder;
         result = coder.Code(this, this, NULL, NULL, NULL);
         finished = true;

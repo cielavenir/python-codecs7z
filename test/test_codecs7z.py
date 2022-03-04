@@ -22,7 +22,6 @@ def test_codecs7z_deflate():
     ifl = zlib.decompressobj(-15)
     assert ifl.decompress(bytesio.read()) == content
 
-'''
 def test_codecs7z_inflate():
     bytesio = io.BytesIO()
     with open(os.path.join(os.path.dirname(__file__), '10000SalesRecords.csv'), 'rb') as f:
@@ -31,7 +30,7 @@ def test_codecs7z_inflate():
         l = len(content)
         siz = 1024
         cnt = (l+siz-1)//siz
-        dfl = codecs7z.deflate_compressobj()
+        dfl = zlib.compressobj(zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -15)
         for i in range(cnt):
             bytesio.write(dfl.compress(f.read(siz)))
         bytesio.write(dfl.flush())
@@ -39,7 +38,6 @@ def test_codecs7z_inflate():
     bytesio.seek(0)
     ifl = codecs7z.deflate_decompressobj()
     assert ifl.decompress(bytesio.read())+ifl.decompress(b'') == content
-'''
 
 def test_codecs7z_deflate64():
     try:
@@ -62,7 +60,6 @@ def test_codecs7z_deflate64():
     ifl = deflate64.Deflate64()
     assert ifl.decompress(bytesio.read()) == content
 
-'''
 def test_codecs7z_inflate64():
     bytesio = io.BytesIO()
     with open(os.path.join(os.path.dirname(__file__), '10000SalesRecords.csv'), 'rb') as f:
@@ -78,5 +75,4 @@ def test_codecs7z_inflate64():
         # print(len(bytesio.getvalue()))
     bytesio.seek(0)
     ifl = codecs7z.deflate64_decompressobj()
-    assert ifl.decompress(bytesio.read()) == content
-'''
+    assert ifl.decompress(bytesio.read())+ifl.decompress(b'') == content
