@@ -126,7 +126,7 @@ setup(
     name='codecs7z',
     description='a (light) binding for 7-zip codecs',
     long_description=open("../README.md").read(),
-    version='0.0.0.1',
+    version='0.0.0.3',
     url='https://github.com/cielavenir/python-codecs7z',
     license='LGPL',
     author='cielavenir',

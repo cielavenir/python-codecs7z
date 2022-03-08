@@ -80,6 +80,7 @@ public:
             instr = std::string(buffer, length);
             hasInput = true;
         }
+        py::gil_scoped_release release;
         if(first)offset=0,start_thread();
         first=false;
         for(;hasInput && !finished;)usleep(SLEEP_US);
@@ -266,6 +267,7 @@ PYBIND11_MODULE(codecs7z, m){
      "obj"_a
     )
     .def("flush", &deflate_compressobj::flush)
+    .def_readwrite("eof", &deflate_compressobj::finished)
     ;
 
     py::class_<deflate_decompressobj, std::shared_ptr<deflate_decompressobj> >(m, "deflate_decompressobj")
@@ -273,6 +275,7 @@ PYBIND11_MODULE(codecs7z, m){
     .def("decompress", &deflate_decompressobj::compress,
      "obj"_a
     )
+    .def_readwrite("eof", &deflate_decompressobj::finished)
     ;
 
     py::class_<deflate64_compressobj, std::shared_ptr<deflate64_compressobj> >(m, "deflate64_compressobj")
@@ -281,6 +284,7 @@ PYBIND11_MODULE(codecs7z, m){
      "obj"_a
     )
     .def("flush", &deflate64_compressobj::flush)
+    .def_readwrite("eof", &deflate64_compressobj::finished)
     ;
 
     py::class_<deflate64_decompressobj, std::shared_ptr<deflate64_decompressobj> >(m, "deflate64_decompressobj")
@@ -288,6 +292,7 @@ PYBIND11_MODULE(codecs7z, m){
     .def("decompress", &deflate64_decompressobj::compress,
      "obj"_a
     )
+    .def_readwrite("eof", &deflate64_decompressobj::finished)
     ;
 
     py::class_<bzip2_compressobj, std::shared_ptr<bzip2_compressobj> >(m, "bzip2_compressobj")
@@ -296,6 +301,7 @@ PYBIND11_MODULE(codecs7z, m){
      "obj"_a
     )
     .def("flush", &bzip2_compressobj::flush)
+    .def_readwrite("eof", &bzip2_compressobj::finished)
     ;
 
     py::class_<bzip2_decompressobj, std::shared_ptr<bzip2_decompressobj> >(m, "bzip2_decompressobj")
@@ -303,5 +309,6 @@ PYBIND11_MODULE(codecs7z, m){
     .def("decompress", &bzip2_decompressobj::compress,
      "obj"_a
     )
+    .def_readwrite("eof", &bzip2_decompressobj::finished)
     ;
 }
