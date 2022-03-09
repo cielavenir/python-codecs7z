@@ -119,16 +119,16 @@ extern "C" {
 #endif /* _cplusplus */
 
 /* Windows Declarations that are not Included. */
-extern uintptr_t __cdecl _beginthreadex(
+extern __declspec(dllimport) uintptr_t __cdecl _beginthreadex(
 	void *security,
 	unsigned stack_size,
-	int ( __stdcall *start_address )( void * ),
+	unsigned ( __stdcall *start_address )( void * ),
 	void *arglist,
 	unsigned initflag,
 	unsigned *thrdaddr
 );
 
-extern void __cdecl _endthreadex(
+extern __declspec(dllimport) void __cdecl _endthreadex(
 	unsigned retval
 );
 
@@ -819,7 +819,7 @@ static int pthread_setcanceltype(int type, int *oldtype)
 	return 0;
 }
 
-static int __stdcall pthread_create_wrapper(void *args)
+static unsigned __stdcall pthread_create_wrapper(void *args)
 {
 	struct _pthread_v *tv = (struct _pthread_v *)args;
 
