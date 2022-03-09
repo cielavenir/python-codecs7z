@@ -12,4 +12,4 @@ pybind11_add_module(codecs7z
   ../src/p7zip/CPP/7zip/Common/CWrappers.cpp ../src/p7zip/CPP/7zip/Common/StreamUtils.cpp
   ../src/p7zip/C/Alloc.c ../src/p7zip/C/LzFind.c ../src/p7zip/C/HuffEnc.c ../src/p7zip/C/Sort.c ../src/p7zip/C/BwtSort.c ../src/p7zip/C/Threads.c
 )
-include_directories(../src/p7zip/CPP ../src/p7zip/CPP/myWindows ../src/p7zip/CPP/include_windows)
+include_directories(../src/p7zip/CPP ../src/p7zip/CPP/Windows ../src/p7zip/CPP/myWindows ../src/p7zip/CPP/include_windows)
