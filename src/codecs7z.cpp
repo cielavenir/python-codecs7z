@@ -9,18 +9,18 @@
 #include "7zip/Compress/BZip2Encoder.h"
 #include "7zip/Compress/BZip2Decoder.h"
 
-#if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
-#include "winpthreads.h"
-#define ssize_t size_t
-#else
-#include <pthread.h>
-#endif
-
 const unsigned int SLEEP_US = 10;
 
 #include <chrono>
 #include <thread>
 #define usleep(usec) std::this_thread::sleep_for(std::chrono::microseconds(usec))
+
+#if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
+#include "winpthreads.h"
+#define ssize_t Py_ssize_t
+#else
+#include <pthread.h>
+#endif
 
 namespace py = pybind11;
 using namespace pybind11::literals;
