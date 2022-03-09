@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
-#include <sys/types.h>
 
 #if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
 #include "winpthreads.h"
+typedef signed size_t ssize_t;
 #else
 #include <pthread.h>
 #endif

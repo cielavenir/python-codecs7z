@@ -122,7 +122,7 @@ extern "C" {
 extern uintptr_t _beginthreadex(
 	void *security,
 	unsigned stack_size,
-	int ( __cdecl *start_address )( void * ),
+	int ( __stdcall *start_address )( void * ),
 	void *arglist,
 	unsigned initflag,
 	unsigned *thrdaddr
@@ -819,7 +819,7 @@ static int pthread_setcanceltype(int type, int *oldtype)
 	return 0;
 }
 
-static int pthread_create_wrapper(void *args)
+static int __stdcall pthread_create_wrapper(void *args)
 {
 	struct _pthread_v *tv = (struct _pthread_v *)args;
 
