@@ -126,7 +126,7 @@ setup(
     name='codecs7z',
     description='a (light) binding for 7-zip codecs',
     long_description=open("../README.md").read(),
-    version='0.0.0.3',
+    version='0.0.0.4',
     url='https://github.com/cielavenir/python-codecs7z',
     license='LGPL',
     author='cielavenir',
@@ -142,7 +142,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Python Software Foundation License',
         'Operating System :: POSIX',
-        #'Operating System :: Microsoft :: Windows',
+        'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
         'Topic :: Software Development :: Libraries',
         'Topic :: Utilities',
@@ -152,6 +152,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        # 'Programming Language :: Python :: Implementation :: PyPy',
+        'Programming Language :: Python :: Implementation :: PyPy',
     ]
 )
