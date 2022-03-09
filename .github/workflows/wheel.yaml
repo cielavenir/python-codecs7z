@@ -1,0 +1,31 @@
+name: wheel
+  
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        python-version: ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodule
+      run: |
+        git submodule init
+        git submodule update
+    - name: Install tox and pypa-build
+      run: |
+        pip install --upgrade pip
+        pip install tox build
+    - name: Build wheel
+      run: |
+        pyproject-build --wheel
+    - name: Upload wheel
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel
+        path: dist
