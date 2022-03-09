@@ -1,12 +1,5 @@
 #include <pybind11/pybind11.h>
 
-#if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
-#include "winpthreads.h"
-typedef signed size_t ssize_t;
-#else
-#include <pthread.h>
-#endif
-
 #include "StdAfx.h"
 #include "Common/MyInitGuid.h"
 #include "7zip/ICoder.h"
@@ -15,6 +8,13 @@ typedef signed size_t ssize_t;
 #include "7zip/Compress/DeflateDecoder.h"
 #include "7zip/Compress/BZip2Encoder.h"
 #include "7zip/Compress/BZip2Decoder.h"
+
+#if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
+#include "winpthreads.h"
+#define ssize_t size_t
+#else
+#include <pthread.h>
+#endif
 
 const unsigned int SLEEP_US = 10;
 

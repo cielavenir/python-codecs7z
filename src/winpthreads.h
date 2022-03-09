@@ -119,7 +119,7 @@ extern "C" {
 #endif /* _cplusplus */
 
 /* Windows Declarations that are not Included. */
-extern uintptr_t _beginthreadex(
+extern uintptr_t __cdecl _beginthreadex(
 	void *security,
 	unsigned stack_size,
 	int ( __stdcall *start_address )( void * ),
@@ -128,7 +128,7 @@ extern uintptr_t _beginthreadex(
 	unsigned *thrdaddr
 );
 
-extern void _endthreadex(
+extern void __cdecl _endthreadex(
 	unsigned retval
 );
 
