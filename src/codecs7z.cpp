@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <sys/types.h>
 
 #if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
 #include "winpthreads.h"
@@ -16,6 +17,10 @@
 #include "7zip/Compress/BZip2Decoder.h"
 
 const unsigned int SLEEP_US = 10;
+
+#include <chrono>
+#include <thread>
+#define usleep(usec) std::this_thread::sleep_for(std::chrono::microseconds(usec))
 
 namespace py = pybind11;
 using namespace pybind11::literals;
