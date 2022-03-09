@@ -27,6 +27,7 @@ jobs:
     - name: Remove non-manylinux wheels
       run: |
         sudo rm -f dist/*-linux*.whl
+        sudo rm -f dist/*manylinux*manylinux*manylinux*manylinux*.whl
     - name: Upload wheel
       uses: actions/upload-artifact@v2
       with:
