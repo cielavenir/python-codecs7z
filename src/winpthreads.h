@@ -42,19 +42,32 @@
  * Version 1.0.1 Released 2 Feb 2012
  * Fixes pthread_barrier_destroy() to wait for threads to exit the barrier.
  */
+#ifdef _MSC_VER
 
 #ifndef WIN_PTHREADS
 #define WIN_PTHREADS
 
+/* Disable Warnings */
+#pragma warning(push)
+#pragma warning(disable : 4312)
+
+/* Wrap Standard Functions with Cancelation Points */
+#define WRAP_CANCELLATION_POINTS true
 
 #include <windows.h>
+
+#include <stdio.h>
 #include <setjmp.h>
 #include <errno.h>
 #include <sys/timeb.h>
+#include <time.h>
 
+#ifndef ETIMEDOUT
 #define ETIMEDOUT	110
+#endif /* ETIMEDOUT */
+#ifndef ENOTSUP
 #define ENOTSUP		134
-
+#endif /* ENOTSUP */
 
 #define PTHREAD_CANCEL_DISABLE 0
 #define PTHREAD_CANCEL_ENABLE 0x01
@@ -101,14 +114,65 @@
 
 #define PTHREAD_BARRIER_SERIAL_THREAD 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* _cplusplus */
 
-/* Windows doesn't have this, so declare it ourselves. */
-struct timespec
-{
-	/* long long in windows is the same as long in unix for 64bit */
-	long long tv_sec;
-	long long tv_nsec;
-};
+/* Windows Declarations that are not Included. */
+extern uintptr_t _beginthreadex(
+	void *security,
+	unsigned stack_size,
+	int ( __cdecl *start_address )( void * ),
+	void *arglist,
+	unsigned initflag,
+	unsigned *thrdaddr
+);
+
+extern void _endthreadex(
+	unsigned retval
+);
+
+extern void * _InterlockedCompareExchangePointer (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
+
+extern void * _InterlockedCompareExchangePointer_acq (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
+
+extern void * _InterlockedCompareExchangePointer_HLEAcquire (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
+
+extern void * _InterlockedCompareExchangePointer_HLERelease (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
+
+extern void * _InterlockedCompareExchangePointer_nf (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
+
+extern void * _InterlockedCompareExchangePointer_np (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
+
+extern long _InterlockedCompareExchangePointer_rel (
+   void * volatile * Destination,
+   void * Exchange,
+   void * Comparand
+);
 
 typedef struct _pthread_cleanup _pthread_cleanup;
 struct _pthread_cleanup
@@ -126,7 +190,7 @@ struct _pthread_v
 	HANDLE h;
 	int cancelled;
 	unsigned p_state;
-	int keymax;
+	unsigned keymax;
 	void **keyval;
 
 	jmp_buf jb;
@@ -144,6 +208,7 @@ struct pthread_barrier_t
 };
 
 typedef struct pthread_attr_t pthread_attr_t;
+
 struct pthread_attr_t
 {
 	unsigned p_state;
@@ -162,20 +227,21 @@ typedef int pthread_condattr_t;
 typedef CONDITION_VARIABLE pthread_cond_t;
 typedef int pthread_rwlockattr_t;
 
+/* Pthread Cancelling Variable */
 volatile long _pthread_cancelling;
 
+/* Pthread Concurrency */
 int _pthread_concur;
 
 /* Will default to zero as needed */
 pthread_once_t _pthread_tls_once;
 DWORD _pthread_tls;
 
-/* Note initializer is zero, so this works */
+/* Pthread Key */
 pthread_rwlock_t _pthread_key_lock;
-long _pthread_key_max;
-long _pthread_key_sch;
+unsigned long _pthread_key_max;
+unsigned long _pthread_key_sch;
 void (**_pthread_key_dest)(void *);
-
 
 #define pthread_cleanup_push(F, A)\
 {\
@@ -184,9 +250,11 @@ void (**_pthread_key_dest)(void *);
 	pthread_self()->clean = (_pthread_cleanup *) &_pthread_cup;\
 	_ReadWriteBarrier()
 
-/* Note that if async cancelling is used, then there is a race here */
+/* Note that if Async Cancelling is used, then there is a race here. */
 #define pthread_cleanup_pop(E)\
-	(pthread_self()->clean = _pthread_cup.next, (E?_pthread_cup.func(_pthread_cup.arg):0));}
+        pthread_self()->clean = _pthread_cup.next;\
+	if(E) _pthread_cup.func(_pthread_cup.arg);\
+};
 
 static void _pthread_once_cleanup(pthread_once_t *o)
 {
@@ -194,6 +262,7 @@ static void _pthread_once_cleanup(pthread_once_t *o)
 }
 
 static pthread_t pthread_self(void);
+
 static int pthread_once(pthread_once_t *o, void (*func)(void))
 {
 	long state = *o;
@@ -207,7 +276,7 @@ static int pthread_once(pthread_once_t *o, void (*func)(void))
 			if (!_InterlockedCompareExchange(o, 2, 0))
 			{
 				/* Success */
-				pthread_cleanup_push(_pthread_once_cleanup, o);
+				pthread_cleanup_push((void (__cdecl *)(void *)) _pthread_once_cleanup, o);
 				func();
 				pthread_cleanup_pop(0);
 
@@ -341,9 +410,11 @@ static void pthread_tls_init(void)
 	if (_pthread_tls == TLS_OUT_OF_INDEXES) abort();
 }
 
+static int pthread_rwlock_unlock(pthread_rwlock_t *l);
+
 static void _pthread_cleanup_dest(pthread_t t)
 {
-	int i, j;
+	unsigned i, j;
 
 	for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; j++)
 	{
@@ -378,12 +449,12 @@ static pthread_t pthread_self(void)
 
 	_pthread_once_raw(&_pthread_tls_once, pthread_tls_init);
 
-	t = TlsGetValue(_pthread_tls);
+	t = (pthread_t) TlsGetValue(_pthread_tls);
 
 	/* Main thread? */
 	if (!t)
 	{
-		t = malloc(sizeof(struct _pthread_v));
+		t = (pthread_t) malloc(sizeof(struct _pthread_v));
 
 		/* If cannot initialize main thread, then the only thing we can do is abort */
 		if (!t) abort();
@@ -440,7 +511,7 @@ static int pthread_rwlock_tryrdlock(pthread_rwlock_t *l)
 	if (!state)
 	{
 		/* Unlocked to locked */
-		if (!_InterlockedCompareExchangePointer((void *) l, (void *)0x11, NULL)) return 0;
+		if (!_InterlockedCompareExchangePointer((volatile PVOID *) l, (void *)0x11, NULL)) return 0;
 		return EBUSY;
 	}
 
@@ -450,7 +521,7 @@ static int pthread_rwlock_tryrdlock(pthread_rwlock_t *l)
 	/* Multiple writers exist? */
 	if ((uintptr_t) state & 14) return EBUSY;
 
-	if (_InterlockedCompareExchangePointer((void *) l, (void *) ((uintptr_t)state + 16), state) == state) return 0;
+	if (_InterlockedCompareExchangePointer((volatile PVOID *) l, (void *) ((uintptr_t)state + 16), state) == state) return 0;
 
 	return EBUSY;
 }
@@ -458,7 +529,7 @@ static int pthread_rwlock_tryrdlock(pthread_rwlock_t *l)
 static int pthread_rwlock_trywrlock(pthread_rwlock_t *l)
 {
 	/* Try to grab lock if it has no users */
-	if (!_InterlockedCompareExchangePointer((void *) l, (void *)1, NULL)) return 0;
+	if (!_InterlockedCompareExchangePointer((volatile PVOID *) l, (void *)1, NULL)) return 0;
 
 	return EBUSY;
 }
@@ -467,7 +538,7 @@ static unsigned long long _pthread_time_in_ms(void)
 {
 	struct __timeb64 tb;
 
-	_ftime64(&tb);
+	_ftime64_s(&tb);
 
 	return tb.time * 1000 + tb.millitm;
 }
@@ -750,8 +821,7 @@ static int pthread_setcanceltype(int type, int *oldtype)
 
 static int pthread_create_wrapper(void *args)
 {
-	struct _pthread_v *tv = args;
-	int i, j;
+	struct _pthread_v *tv = (struct _pthread_v *)args;
 
 	_pthread_once_raw(&_pthread_tls_once, pthread_tls_init);
 
@@ -781,8 +851,8 @@ static int pthread_create_wrapper(void *args)
 
 static int pthread_create(pthread_t *th, pthread_attr_t *attr, void *(* func)(void *), void *arg)
 {
-	struct _pthread_v *tv = malloc(sizeof(struct _pthread_v));
-	unsigned ssize = 0;
+	struct _pthread_v *tv = (struct _pthread_v *)malloc(sizeof(struct _pthread_v));
+	size_t ssize = 0;
 
 	if (!tv) return 1;
 
@@ -807,7 +877,7 @@ static int pthread_create(pthread_t *th, pthread_attr_t *attr, void *(* func)(vo
 	/* Make sure tv->h has value of -1 */
 	_ReadWriteBarrier();
 
-	tv->h = (HANDLE) _beginthreadex(NULL, ssize, pthread_create_wrapper, tv, 0, NULL);
+	tv->h = (HANDLE) _beginthreadex(NULL, (unsigned)ssize, pthread_create_wrapper, tv, 0, NULL);
 
 	/* Failed */
 	if (!tv->h) return 1;
@@ -957,7 +1027,7 @@ static int pthread_mutex_timedlock(pthread_mutex_t *m, struct timespec *ts)
 		if (ct > t) return ETIMEDOUT;
 
 		/* Wait on semaphore within critical section */
-		WaitForSingleObject(((struct _pthread_crit_t *)m)->sem, t - ct);
+		WaitForSingleObject(((struct _pthread_crit_t *)m)->sem, (DWORD)(t - ct));
 
 		/* Try to grab lock */
 		if (!pthread_mutex_trylock(m)) return 0;
@@ -1072,7 +1142,7 @@ static int pthread_barrierattr_getpshared(void **attr, int *s)
 
 static int pthread_key_create(pthread_key_t *key, void (* dest)(void *))
 {
-	int i;
+	unsigned long i;
 	long nmax;
 	void (**d)(void *);
 
@@ -1130,7 +1200,7 @@ static int pthread_key_create(pthread_key_t *key, void (* dest)(void *))
 	if (nmax > PTHREAD_KEYS_MAX) nmax = PTHREAD_KEYS_MAX;
 
 	/* No spare room anywhere */
-	d = realloc(_pthread_key_dest, nmax * sizeof(*d));
+	d = (void (**)(void *))realloc(_pthread_key_dest, nmax * sizeof(*d));
 	if (!d)
 	{
 		pthread_rwlock_unlock(&_pthread_key_lock);
@@ -1194,7 +1264,7 @@ static int pthread_setspecific(pthread_key_t key, const void *value)
 	if (key > t->keymax)
 	{
 		int keymax = (key + 1) * 2;
-		void **kv = realloc(t->keyval, keymax * sizeof(void *));
+		void **kv = (void **)realloc(t->keyval, keymax * sizeof(void *));
 
 		if (!kv) return ENOMEM;
 
@@ -1297,7 +1367,7 @@ static int pthread_cond_timedwait(pthread_cond_t *c, pthread_mutex_t *m, struct 
 
 	pthread_testcancel();
 
-	if (!SleepConditionVariableCS(c, m, tm)) return ETIMEDOUT;
+	if (!SleepConditionVariableCS(c, m, (DWORD)tm)) return ETIMEDOUT;
 
 	/* We can have a spurious wakeup after the timeout */
 	if (!_pthread_rel_time_in_ms(t)) return ETIMEDOUT;
@@ -1341,6 +1411,7 @@ static int pthread_rwlockattr_destroy(pthread_rwlockattr_t *a)
 static int pthread_rwlockattr_init(pthread_rwlockattr_t *a)
 {
 	*a = 0;
+	return 0;
 }
 
 static int pthread_rwlockattr_getpshared(pthread_rwlockattr_t *a, int *s)
@@ -1355,6 +1426,9 @@ static int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *a, int s)
 	return 0;
 }
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 /* No fork() in windows - so ignore this */
 #define pthread_atfork(F1,F2,F3) 0
@@ -1363,8 +1437,9 @@ static int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *a, int s)
 #define pthread_kill(T, S) 0
 #define pthread_sigmask(H, S1, S2) 0
 
+/* Wrap Cancellation Points. If this is true, ensure you include libraries before this Header. */
+#ifdef WRAP_CANCELLATION_POINTS
 
-/* Wrap cancellation points */
 #define accept(...) (pthread_testcancel(), accept(__VA_ARGS__))
 #define aio_suspend(...) (pthread_testcancel(), aio_suspend(__VA_ARGS__))
 #define clock_nanosleep(...) (pthread_testcancel(), clock_nanosleep(__VA_ARGS__))
@@ -1409,9 +1484,8 @@ static int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *a, int s)
 #define sigwait(...) (pthread_testcancel(), sigwait(__VA_ARGS__))
 #define sigwaitinfo(...) (pthread_testcancel(), sigwaitinfo(__VA_ARGS__))
 #define sleep(...) (pthread_testcancel(), sleep(__VA_ARGS__))
-//#define Sleep(...) (pthread_testcancel(), Sleep(__VA_ARGS__))
+#define Sleep(...) (pthread_testcancel(), Sleep(__VA_ARGS__))
 #define system(...) (pthread_testcancel(), system(__VA_ARGS__))
-
 
 #define access(...) (pthread_testcancel(), access(__VA_ARGS__))
 #define asctime(...) (pthread_testcancel(), asctime(__VA_ARGS__))
@@ -1602,4 +1676,8 @@ static int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *a, int s)
 #define wprintf(...) (pthread_testcancel(), wprintf(__VA_ARGS__))
 #define wscanf(...) (pthread_testcancel(), wscanf(__VA_ARGS__))
 
+#endif /* WRAP_CANCELATION_POINTS */
+
+#pragma warning(pop)
 #endif /* WIN_PTHREADS */
+#endif /* _MSC_VER */
