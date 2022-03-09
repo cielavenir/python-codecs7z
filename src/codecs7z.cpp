@@ -1,5 +1,11 @@
 #include <pybind11/pybind11.h>
 
+#if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
+#include "winpthreads.h"
+#else
+#include <pthread.h>
+#endif
+
 #include "StdAfx.h"
 #include "Common/MyInitGuid.h"
 #include "7zip/ICoder.h"
