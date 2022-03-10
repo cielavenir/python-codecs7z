@@ -55,6 +55,7 @@ public:
     }
     ~compressobj_base(){
         pthread_cancel(thread);
+        pthread_detach(thread);
     }
 
     MY_UNKNOWN_IMP2(ISequentialInStream, ISequentialOutStream)
@@ -99,6 +100,7 @@ public:
             for(;!requireInput && !finished;)usleep(SLEEP_US);
             if(finished){
                 pthread_join(thread,NULL);
+                thread=NULL;
                 if(result)throw std::runtime_error(format("Code() error (%d)", result));
             }
         }
@@ -119,6 +121,7 @@ public:
             for(;!requireInput && !finished;)usleep(SLEEP_US);
             if(finished){
                 pthread_join(thread,NULL);
+                thread=NULL;
                 if(result)throw std::runtime_error(format("Code() error (%d)", result));
             }
         }
