@@ -54,8 +54,10 @@ public:
         outstr.reserve(65536);
     }
     ~compressobj_base(){
-        pthread_cancel(thread);
-        pthread_detach(thread);
+        if(thread){
+            pthread_cancel(thread);
+            pthread_detach(thread);
+        }
     }
 
     MY_UNKNOWN_IMP2(ISequentialInStream, ISequentialOutStream)
