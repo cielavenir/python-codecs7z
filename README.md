@@ -24,4 +24,4 @@ For now Deflate/Deflate64/BZip2 are covered.
 
 ## Windows installation
 
-You need to switch src/p7zip submodule tag to build Windows wheel, so **for http-direct-install you need to use binary wheel.**
+You need to switch src/p7zip submodule tag to build Windows wheel and sdist installation is not supported, so **for http-direct-install you need to use binary wheel.**
