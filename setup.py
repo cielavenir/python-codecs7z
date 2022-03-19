@@ -105,7 +105,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Python Software Foundation License',
+        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
