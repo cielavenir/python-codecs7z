@@ -81,7 +81,7 @@ ext_modules = [
         ],
         include_dirs=['src/p7zip/CPP', 'src/p7zip/CPP/Windows', 'src/p7zip/CPP/myWindows', 'src/p7zip/CPP/include_windows'],
         extra_objects=[],
-        extra_compile_args=extra_compile_args,
+        extra_compile_args=list(extra_compile_args),
         extra_link_args=['-s'],
         #extra_link_args=['-Wl,--no-undefined'],
     ),
