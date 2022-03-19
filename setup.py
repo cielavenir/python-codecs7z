@@ -68,8 +68,8 @@ class build_ext_hook(build_ext, object):
 
 ext_modules = [
     Pybind11Extension(
-        "codecs7z",
-        [
+        name="codecs7z",
+        sources=[
             'src/codecs7z.cpp',
             'src/p7zip/CPP/7zip/Compress/DeflateEncoder.cpp', 'src/p7zip/CPP/7zip/Compress/DeflateDecoder.cpp',
             'src/p7zip/CPP/7zip/Compress/BZip2Encoder.cpp', 'src/p7zip/CPP/7zip/Compress/BZip2Decoder.cpp',
