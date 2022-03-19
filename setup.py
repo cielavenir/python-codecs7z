@@ -40,7 +40,7 @@ class build_ext_hook(build_ext, object):
                     '-I', sysconfig.get_paths()['include'],
                     '-I', sysconfig.get_paths()['platinclude'],
                     '-I', pybind11.get_include(),
-                    source]+extra_compile_args+win64flags)
+                    source]+extra_compile_args+win64flags+sum((['-I', dir] for dir in ext.include_dirs), []))
                 ext.extra_objects.append(objname)
                 ext.sources.pop(0)
                 if True:
