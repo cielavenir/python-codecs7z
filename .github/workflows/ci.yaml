@@ -44,7 +44,7 @@ jobs:
         git submodule init
         git submodule update
     - name: Change submodule tag on Windows
-      if: ${{ matrix.os == 'windows-latest' }}
+      if: ${{ matrix.os == 'windows-latest' && ( matrix.python-version == '2.7' || matrix.python-version == '3.4' ) }}
       run: |
         git -C src/p7zip checkout origin/7zip_21.02
     - name: Set up Python ${{ matrix.python-version }}
