@@ -78,6 +78,7 @@ ext_modules = [
             'src/p7zip/CPP/7zip/Common/InBuffer.cpp', 'src/p7zip/CPP/7zip/Common/OutBuffer.cpp',
             'src/p7zip/CPP/7zip/Common/CWrappers.cpp', 'src/p7zip/CPP/7zip/Common/StreamUtils.cpp',
             'src/p7zip/C/Alloc.c', 'src/p7zip/C/LzFind.c', 'src/p7zip/C/HuffEnc.c', 'src/p7zip/C/Sort.c', 'src/p7zip/C/BwtSort.c', 'src/p7zip/C/Threads.c',
+            'src/p7zip/C/CpuArch.c',
         ],
         include_dirs=['src/p7zip/CPP', 'src/p7zip/CPP/Windows', 'src/p7zip/CPP/myWindows', 'src/p7zip/CPP/include_windows'],
         extra_objects=[],
