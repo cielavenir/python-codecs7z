@@ -93,7 +93,7 @@ setup(
     description='a (light) binding for 7-zip codecs',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
-    version='0.0.0.6',
+    version='0.0.0.7',
     url='https://github.com/cielavenir/python-codecs7z',
     license='LGPL',
     author='cielavenir',
