@@ -8,6 +8,10 @@ import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+versionContext = {}
+with open('../codecs7z/version.py') as f:
+    exec(f.read(), versionContext)
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -126,13 +130,15 @@ setup(
     name='codecs7z',
     description='a (light) binding for 7-zip codecs',
     long_description=open("../README.md").read(),
-    version='0.0.0.6',
+    version=versionContext['__version__'],
     url='https://github.com/cielavenir/python-codecs7z',
     license='LGPL',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
     #setup_requires=["pybind11"],
-    ext_modules=[CMakeExtension('codecs7z')],
+    package_dir = {'': '..'},
+    packages=['codecs7z'],
+    ext_modules=[CMakeExtension('codecs7z.codecs7z')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     include_package_data=True,
