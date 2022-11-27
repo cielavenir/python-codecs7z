@@ -38,7 +38,7 @@ jobs:
             architecture: "x64"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Checkout submodule
       run: |
         git submodule init
@@ -49,7 +49,7 @@ jobs:
         git -C src/p7zip checkout origin/7zip_21.02
     - name: Set up Python ${{ matrix.python-version }}
       if: ${{ matrix.python-version != 'pyston' }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.architecture }}
@@ -90,4 +90,5 @@ jobs:
         python -m pip install .
     - name: Test
       run: |
+        # has to be script to avoid current directory being sys.path
         pytest -v test
